@@ -11,35 +11,35 @@ export default function ModernTeacherLogin({ onLogin, onBack }) {
     };
 
     return (
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center w-full">
             <div className="fixed inset-0 bg-gradient-to-br from-green-50 via-white to-emerald-50 -z-10"></div>
 
-            <div className="bg-white p-10 rounded-2xl shadow-lg max-w-lg w-full border border-gray-200">
-                <div className="w-20 h-20 bg-[#217346] rounded-xl flex items-center justify-center mx-auto mb-6 shadow-md">
-                    <Shield size={36} className="text-white" strokeWidth={2} />
+            <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full border border-gray-200">
+                <div className="w-16 h-16 bg-[#217346] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-md">
+                    <Shield size={32} className="text-white" strokeWidth={2} />
                 </div>
 
-                <h2 className="text-3xl font-bold mb-2 text-center text-gray-900">
+                <h2 className="text-2xl font-bold mb-2 text-center text-gray-900">
                     Login Guru
                 </h2>
-                <p className="text-base text-center text-gray-600 mb-8">
+                <p className="text-sm text-center text-gray-600 mb-6">
                     Akses khusus untuk pengelola kuis
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
+                <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                        <label className="block text-xs font-bold text-gray-700 mb-1.5">
                             PIN Admin
                         </label>
                         <div className="relative">
-                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
                             <input
                                 type="password"
                                 placeholder="Masukkan PIN"
                                 value={pin}
                                 onChange={(e) => setPin(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && onLogin(pin)}
-                                className="w-full pl-12 pr-4 py-3.5 border-2 border-gray-200 rounded-lg transition-all focus:border-[#217346] focus:ring-2 focus:ring-green-100 outline-none text-center font-semibold tracking-widest text-base"
+                                className="w-full pl-10 pr-4 py-3 border-2 border-gray-200 rounded-lg transition-all focus:border-[#217346] focus:ring-2 focus:ring-green-100 outline-none text-center font-semibold tracking-widest text-sm"
                                 autoFocus
                             />
                         </div>
