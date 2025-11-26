@@ -135,18 +135,18 @@ export default function ExcelQuizApp() {
       q,
       (snapshot) => {
         const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        
+
         // Group by level
         const byLevel = {};
         docs.forEach(d => {
-            if(!byLevel[d.level]) byLevel[d.level] = [];
-            byLevel[d.level].push(d);
+          if (!byLevel[d.level]) byLevel[d.level] = [];
+          byLevel[d.level].push(d);
         });
 
         // Shuffle each level and flatten
         let shuffledQuestions = [];
-        Object.keys(byLevel).sort((a,b) => a - b).forEach(level => {
-            shuffledQuestions = [...shuffledQuestions, ...shuffleArray(byLevel[level])];
+        Object.keys(byLevel).sort((a, b) => a - b).forEach(level => {
+          shuffledQuestions = [...shuffledQuestions, ...shuffleArray(byLevel[level])];
         });
 
         setQuestions(shuffledQuestions);
@@ -329,21 +329,19 @@ function TeacherDashboard({ questions, onError }) {
       <div className="flex gap-4 border-b pb-2">
         <button
           onClick={() => setActiveTab("questions")}
-          className={`pb-2 px-4 font-semibold ${
-            activeTab === "questions"
+          className={`pb-2 px-4 font-semibold ${activeTab === "questions"
               ? "text-[#217346] border-b-2 border-[#217346]"
               : "text-gray-500"
-          }`}
+            }`}
         >
           Soal ({questions.length})
         </button>
         <button
           onClick={() => setActiveTab("students")}
-          className={`pb-2 px-4 font-semibold ${
-            activeTab === "students"
+          className={`pb-2 px-4 font-semibold ${activeTab === "students"
               ? "text-[#217346] border-b-2 border-[#217346]"
               : "text-gray-500"
-          }`}
+            }`}
         >
           Hasil Siswa
         </button>
@@ -540,6 +538,13 @@ function StudentResultsManager() {
     a.click();
   };
 
+  const handleDelete = async (id, name) => {
+    if (confirm(`Hapus record ${name}?`))
+      await deleteDoc(
+        doc(db, "artifacts", appId, "public", "data", "results", id)
+      );
+  };
+
   return (
     <div className="bg-white p-6 rounded shadow">
       <div className="flex justify-between mb-4">
@@ -557,14 +562,24 @@ function StudentResultsManager() {
             <th className="p-2">Nama</th>
             <th className="p-2">Skor</th>
             <th className="p-2">Grade</th>
+            <th className="p-2 text-center">Aksi</th>
           </tr>
         </thead>
         <tbody>
           {results.map((r) => (
-            <tr key={r.id} className="border-b">
+            <tr key={r.id} className="border-b hover:bg-gray-50">
               <td className="p-2">{r.studentName}</td>
               <td className="p-2 font-bold">{r.totalScore}</td>
               <td className="p-2">{r.finalGrade}</td>
+              <td className="p-2 text-center">
+                <button
+                  onClick={() => handleDelete(r.id, r.studentName)}
+                  className="text-red-500 hover:text-red-700 transition"
+                  title="Hapus record"
+                >
+                  <Trash2 size={16} />
+                </button>
+              </td>
             </tr>
           ))}
         </tbody>
@@ -588,9 +603,8 @@ function StudentRegistration({ onStart, onBack }) {
         />
         <button
           onClick={() => name.length >= 3 && onStart(name)}
-          className={`w-full py-3 rounded font-bold text-white ${
-            name.length < 3 ? "bg-gray-300" : "bg-[#217346]"
-          }`}
+          className={`w-full py-3 rounded font-bold text-white ${name.length < 3 ? "bg-gray-300" : "bg-[#217346]"
+            }`}
         >
           Mulai
         </button>
@@ -603,16 +617,16 @@ function StudentRegistration({ onStart, onBack }) {
 }
 
 const saveScore = async (studentName, score, totalQuestions) => {
-    try {
-        await addDoc(collection(db, "artifacts", appId, "public", "data", "results"), {
-            studentName,
-            totalScore: score,
-            finalGrade: calculateGrade(score, totalQuestions * 20),
-            createdAt: serverTimestamp(),
-        });
-    } catch (e) {
-        console.error("Error saving score:", e);
-    }
+  try {
+    await addDoc(collection(db, "artifacts", appId, "public", "data", "results"), {
+      studentName,
+      totalScore: score,
+      finalGrade: calculateGrade(score, totalQuestions * 20),
+      createdAt: serverTimestamp(),
+    });
+  } catch (e) {
+    console.error("Error saving score:", e);
+  }
 };
 
 function QuizGame({
@@ -624,7 +638,7 @@ function QuizGame({
 }) {
   const [ans, setAns] = useState("");
   const [modal, setModal] = useState(null); // { type: 'correct' | 'wrong', message: string }
-  
+
   const levelQs = useMemo(
     () => questions.filter((q) => q.level === quizState.currentLevel),
     [questions, quizState.currentLevel]
@@ -634,17 +648,17 @@ function QuizGame({
   const submit = () => {
     if (!currentQ) return;
     const isCorrect = normalizeAnswer(ans) === normalizeAnswer(currentQ.answer);
-    
+
     if (isCorrect) {
       const bonus = (quizState.streak + 1) % 3 === 0 ? 10 : 0;
       const newScore = quizState.score + 20 + bonus;
-      
+
       setQuizState((p) => ({
         ...p,
         score: newScore,
         streak: p.streak + 1,
       }));
-      
+
       setModal({
         type: 'correct',
         message: bonus > 0 ? `Benar! Bonus Streak +${bonus}!` : "Jawaban Benar!",
@@ -653,7 +667,7 @@ function QuizGame({
     } else {
       const newLives = quizState.lives - 1;
       const newScore = Math.max(0, quizState.score - 3);
-      
+
       setQuizState((p) => ({
         ...p,
         lives: newLives,
@@ -665,14 +679,14 @@ function QuizGame({
         // Game Over Logic
         saveScore(studentName, newScore, questions.length);
         setModal({
-            type: 'wrong',
-            message: "Game Over! Nyawa habis.",
-            isGameOver: true
+          type: 'wrong',
+          message: "Game Over! Nyawa habis.",
+          isGameOver: true
         });
       } else {
         setModal({
-            type: 'wrong',
-            message: "Jawaban Salah! Nyawa -1",
+          type: 'wrong',
+          message: "Jawaban Salah! Nyawa -1",
         });
       }
     }
@@ -681,18 +695,18 @@ function QuizGame({
   const handleNext = () => {
     setModal(null);
     setAns("");
-    
+
     // If it was game over, restart level or go to result? 
     // Usually game over means restart from beginning or just end. 
     // Based on previous logic: "Restart Level".
     if (quizState.lives <= 0) {
-        setQuizState((p) => ({
-          ...p,
-          lives: 3,
-          currentQuestionIndex: 0,
-          streak: 0,
-        }));
-        return;
+      setQuizState((p) => ({
+        ...p,
+        lives: 3,
+        currentQuestionIndex: 0,
+        streak: 0,
+      }));
+      return;
     }
 
     // Move to next question
@@ -752,11 +766,11 @@ function QuizGame({
 
       {/* Feedback Modal */}
       {modal && (
-        <FeedbackModal 
-            type={modal.type} 
-            message={modal.message} 
-            onNext={handleNext}
-            isGameOver={modal.isGameOver}
+        <FeedbackModal
+          type={modal.type}
+          message={modal.message}
+          onNext={handleNext}
+          isGameOver={modal.isGameOver}
         />
       )}
     </div>
@@ -764,32 +778,31 @@ function QuizGame({
 }
 
 function FeedbackModal({ type, message, onNext, isGameOver }) {
-    return (
-        <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center rounded z-10 p-6 text-center animate-in fade-in zoom-in duration-200">
-            {type === 'correct' ? (
-                <CheckCircle className="text-green-500 mb-4" size={64} />
-            ) : (
-                <XCircle className="text-red-500 mb-4" size={64} />
-            )}
-            <h3 className={`text-2xl font-bold mb-2 ${type === 'correct' ? 'text-green-600' : 'text-red-600'}`}>
-                {type === 'correct' ? 'Hebat!' : 'Oops!'}
-            </h3>
-            <p className="text-gray-600 mb-6 text-lg">{message}</p>
-            <button 
-                onClick={onNext}
-                className={`px-8 py-3 rounded-full font-bold text-white shadow-lg transform transition hover:scale-105 ${
-                    type === 'correct' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
-                }`}
-            >
-                {isGameOver ? "Coba Lagi" : "Lanjut"}
-            </button>
-        </div>
-    );
+  return (
+    <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center rounded z-10 p-6 text-center animate-in fade-in zoom-in duration-200">
+      {type === 'correct' ? (
+        <CheckCircle className="text-green-500 mb-4" size={64} />
+      ) : (
+        <XCircle className="text-red-500 mb-4" size={64} />
+      )}
+      <h3 className={`text-2xl font-bold mb-2 ${type === 'correct' ? 'text-green-600' : 'text-red-600'}`}>
+        {type === 'correct' ? 'Hebat!' : 'Oops!'}
+      </h3>
+      <p className="text-gray-600 mb-6 text-lg">{message}</p>
+      <button
+        onClick={onNext}
+        className={`px-8 py-3 rounded-full font-bold text-white shadow-lg transform transition hover:scale-105 ${type === 'correct' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+          }`}
+      >
+        {isGameOver ? "Coba Lagi" : "Lanjut"}
+      </button>
+    </div>
+  );
 }
 
 function StudentResult({ studentName, quizState, totalQuestions, onRestart }) {
   const [saved, setSaved] = useState(false);
-  
+
   useEffect(() => {
     if (saved) return;
     saveScore(studentName, quizState.score, totalQuestions).then(() => setSaved(true));
