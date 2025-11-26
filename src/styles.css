@@ -2,3 +2,18 @@
   font-family: sans-serif;
   text-align: center;
 }
+
+/* Responsive Zoom Scaling */
+/* For screens smaller than 1920px - zoom to 75% */
+@media (max-width: 1919px) {
+  body {
+    zoom: 75%;
+  }
+}
+
+/* For screens 1920px and above - keep at 100% */
+@media (min-width: 1920px) {
+  body {
+    zoom: 100%;
+  }
+}

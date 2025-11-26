@@ -1,5 +1,9 @@
 // @ts-nocheck
 import React, { useState, useEffect, useMemo } from "react";
+import ModernWelcome from "./components/ModernWelcome";
+import ModernStudentReg from "./components/ModernStudentReg";
+import ModernFeedbackModal from "./components/ModernFeedbackModal";
+import ModernTeacherLogin from "./components/ModernTeacherLogin";
 import {
   Trophy,
   Heart,
@@ -227,71 +231,24 @@ export default function ExcelQuizApp() {
       {/* MAIN CONTENT */}
       <main className="max-w-5xl mx-auto p-4">
         {view === "welcome" && (
-          <div className="flex flex-col items-center justify-center min-h-[80vh] text-center space-y-8">
-            <div className="bg-white p-10 rounded-2xl shadow-xl border-t-8 border-[#217346] max-w-md w-full">
-              <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6 text-[#217346]">
-                <BookOpen size={40} />
-              </div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                Excel IF Master
-              </h1>
-              <p className="text-gray-500 mb-8">
-                Kuis Interaktif Belajar Rumus IF
-              </p>
-              <div className="space-y-4">
-                <button
-                  onClick={() => setView("student-reg")}
-                  className="w-full py-4 bg-[#217346] text-white rounded-xl font-bold text-lg hover:bg-[#1a5c38] flex justify-center gap-2"
-                >
-                  <UserIcon /> Siswa
-                </button>
-                <button
-                  onClick={() => setView("teacher-login")}
-                  className="w-full py-3 border-2 border-gray-200 rounded-xl font-semibold hover:border-[#217346]"
-                >
-                  Guru
-                </button>
-              </div>
-            </div>
-          </div>
+          <ModernWelcome
+            onStudentClick={() => setView("student-reg")}
+            onTeacherClick={() => setView("teacher-login")}
+          />
         )}
 
         {view === "teacher-login" && (
-          <div className="flex flex-col items-center justify-center min-h-[80vh]">
-            <div className="bg-white p-8 rounded-xl shadow-lg max-w-sm w-full">
-              <h2 className="text-xl font-bold mb-4 text-center">Login Guru</h2>
-              <input
-                type="password"
-                placeholder="PIN Admin"
-                className="w-full p-3 border rounded-lg mb-4"
-                onKeyDown={(e) =>
-                  e.key === "Enter" && handleTeacherLogin(e.target.value)
-                }
-                id="pinInput"
-              />
-              <button
-                onClick={() =>
-                  handleTeacherLogin(document.getElementById("pinInput").value)
-                }
-                className="w-full bg-[#217346] text-white py-3 rounded-lg font-bold"
-              >
-                Masuk
-              </button>
-              <button
-                onClick={() => setView("welcome")}
-                className="w-full mt-2 text-gray-500 text-sm"
-              >
-                Batal
-              </button>
-            </div>
-          </div>
+          <ModernTeacherLogin
+            onLogin={handleTeacherLogin}
+            onBack={() => setView("welcome")}
+          />
         )}
 
         {view === "teacher-dash" && (
           <TeacherDashboard questions={questions} onError={setErrorMsg} />
         )}
         {view === "student-reg" && (
-          <StudentRegistration
+          <ModernStudentReg
             onStart={handleStartQuiz}
             onBack={() => setView("welcome")}
           />
@@ -330,8 +287,8 @@ function TeacherDashboard({ questions, onError }) {
         <button
           onClick={() => setActiveTab("questions")}
           className={`pb-2 px-4 font-semibold ${activeTab === "questions"
-              ? "text-[#217346] border-b-2 border-[#217346]"
-              : "text-gray-500"
+            ? "text-[#217346] border-b-2 border-[#217346]"
+            : "text-gray-500"
             }`}
         >
           Soal ({questions.length})
@@ -339,8 +296,8 @@ function TeacherDashboard({ questions, onError }) {
         <button
           onClick={() => setActiveTab("students")}
           className={`pb-2 px-4 font-semibold ${activeTab === "students"
-              ? "text-[#217346] border-b-2 border-[#217346]"
-              : "text-gray-500"
+            ? "text-[#217346] border-b-2 border-[#217346]"
+            : "text-gray-500"
             }`}
         >
           Hasil Siswa
