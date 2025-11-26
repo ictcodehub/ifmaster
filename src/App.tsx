@@ -17,6 +17,8 @@ import {
   Download,
   RefreshCw,
   AlertCircle,
+  ArrowRight,
+  RotateCcw,
 } from "lucide-react";
 import { initializeApp } from "firebase/app";
 import {
@@ -78,6 +80,15 @@ const calculateGrade = (score, totalMaxScore) => {
   return "E";
 };
 
+const shuffleArray = (array) => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
 // --- MAIN COMPONENT ---
 export default function ExcelQuizApp() {
   const [user, setUser] = useState(null);
@@ -114,7 +125,7 @@ export default function ExcelQuizApp() {
     return () => unsubscribe();
   }, []);
 
-  // Fetch Questions
+  // Fetch Questions & Randomize
   useEffect(() => {
     if (!user) return;
     const q = query(
@@ -124,11 +135,21 @@ export default function ExcelQuizApp() {
       q,
       (snapshot) => {
         const docs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
-        docs.sort(
-          (a, b) =>
-            a.level - b.level || a.createdAt?.seconds - b.createdAt?.seconds
-        );
-        setQuestions(docs);
+        
+        // Group by level
+        const byLevel = {};
+        docs.forEach(d => {
+            if(!byLevel[d.level]) byLevel[d.level] = [];
+            byLevel[d.level].push(d);
+        });
+
+        // Shuffle each level and flatten
+        let shuffledQuestions = [];
+        Object.keys(byLevel).sort((a,b) => a - b).forEach(level => {
+            shuffledQuestions = [...shuffledQuestions, ...shuffleArray(byLevel[level])];
+        });
+
+        setQuestions(shuffledQuestions);
       },
       (error) => {
         console.error("Error fetching questions:", error);
@@ -581,6 +602,19 @@ function StudentRegistration({ onStart, onBack }) {
   );
 }
 
+const saveScore = async (studentName, score, totalQuestions) => {
+    try {
+        await addDoc(collection(db, "artifacts", appId, "public", "data", "results"), {
+            studentName,
+            totalScore: score,
+            finalGrade: calculateGrade(score, totalQuestions * 20),
+            createdAt: serverTimestamp(),
+        });
+    } catch (e) {
+        console.error("Error saving score:", e);
+    }
+};
+
 function QuizGame({
   questions,
   studentName,
@@ -589,7 +623,8 @@ function QuizGame({
   onFinish,
 }) {
   const [ans, setAns] = useState("");
-  const [feedback, setFeedback] = useState(null);
+  const [modal, setModal] = useState(null); // { type: 'correct' | 'wrong', message: string }
+  
   const levelQs = useMemo(
     () => questions.filter((q) => q.level === quizState.currentLevel),
     [questions, quizState.currentLevel]
@@ -599,51 +634,82 @@ function QuizGame({
   const submit = () => {
     if (!currentQ) return;
     const isCorrect = normalizeAnswer(ans) === normalizeAnswer(currentQ.answer);
+    
     if (isCorrect) {
-      setFeedback("correct");
       const bonus = (quizState.streak + 1) % 3 === 0 ? 10 : 0;
+      const newScore = quizState.score + 20 + bonus;
+      
       setQuizState((p) => ({
         ...p,
-        score: p.score + 20 + bonus,
+        score: newScore,
         streak: p.streak + 1,
       }));
-      setTimeout(() => {
-        setFeedback(null);
-        setAns("");
-        if (quizState.currentQuestionIndex + 1 >= levelQs.length) {
-          if (quizState.currentLevel >= 5) onFinish();
-          else
-            setQuizState((p) => ({
-              ...p,
-              currentLevel: p.currentLevel + 1,
-              currentQuestionIndex: 0,
-              lives: 3,
-            }));
-        } else
-          setQuizState((p) => ({
-            ...p,
-            currentQuestionIndex: p.currentQuestionIndex + 1,
-          }));
-      }, 1000);
+      
+      setModal({
+        type: 'correct',
+        message: bonus > 0 ? `Benar! Bonus Streak +${bonus}!` : "Jawaban Benar!",
+      });
+
     } else {
-      setFeedback("wrong");
+      const newLives = quizState.lives - 1;
+      const newScore = Math.max(0, quizState.score - 3);
+      
       setQuizState((p) => ({
         ...p,
-        lives: p.lives - 1,
-        score: Math.max(0, p.score - 3),
+        lives: newLives,
+        score: newScore,
         streak: 0,
       }));
-      if (quizState.lives - 1 <= 0) {
-        alert("Game Over! Restart Level.");
+
+      if (newLives <= 0) {
+        // Game Over Logic
+        saveScore(studentName, newScore, questions.length);
+        setModal({
+            type: 'wrong',
+            message: "Game Over! Nyawa habis.",
+            isGameOver: true
+        });
+      } else {
+        setModal({
+            type: 'wrong',
+            message: "Jawaban Salah! Nyawa -1",
+        });
+      }
+    }
+  };
+
+  const handleNext = () => {
+    setModal(null);
+    setAns("");
+    
+    // If it was game over, restart level or go to result? 
+    // Usually game over means restart from beginning or just end. 
+    // Based on previous logic: "Restart Level".
+    if (quizState.lives <= 0) {
         setQuizState((p) => ({
           ...p,
           lives: 3,
           currentQuestionIndex: 0,
           streak: 0,
         }));
-        setAns("");
-        setFeedback(null);
-      } else setTimeout(() => setFeedback(null), 1000);
+        return;
+    }
+
+    // Move to next question
+    if (quizState.currentQuestionIndex + 1 >= levelQs.length) {
+      if (quizState.currentLevel >= 5) onFinish();
+      else
+        setQuizState((p) => ({
+          ...p,
+          currentLevel: p.currentLevel + 1,
+          currentQuestionIndex: 0,
+          lives: 3,
+        }));
+    } else {
+      setQuizState((p) => ({
+        ...p,
+        currentQuestionIndex: p.currentQuestionIndex + 1,
+      }));
     }
   };
 
@@ -655,7 +721,7 @@ function QuizGame({
     );
 
   return (
-    <div className="max-w-2xl mx-auto bg-white p-6 rounded shadow-xl mt-4">
+    <div className="max-w-2xl mx-auto bg-white p-6 rounded shadow-xl mt-4 relative">
       <div className="flex justify-between mb-4 text-sm font-bold text-gray-500">
         <span>Level {quizState.currentLevel}</span>
         <div className="flex gap-2">
@@ -671,16 +737,11 @@ function QuizGame({
         💡 Lihat Hint
       </div>
       <input
-        className={`w-full p-3 border-2 rounded font-mono text-lg mb-4 ${
-          feedback === "correct"
-            ? "bg-green-50 border-green-500"
-            : feedback === "wrong"
-            ? "bg-red-50 border-red-500"
-            : ""
-        }`}
+        className="w-full p-3 border-2 rounded font-mono text-lg mb-4"
         value={ans}
         onChange={(e) => setAns(e.target.value)}
         placeholder="=IF(...)"
+        onKeyDown={(e) => e.key === 'Enter' && submit()}
       />
       <button
         onClick={submit}
@@ -688,20 +749,50 @@ function QuizGame({
       >
         Cek Jawaban
       </button>
+
+      {/* Feedback Modal */}
+      {modal && (
+        <FeedbackModal 
+            type={modal.type} 
+            message={modal.message} 
+            onNext={handleNext}
+            isGameOver={modal.isGameOver}
+        />
+      )}
     </div>
   );
 }
 
+function FeedbackModal({ type, message, onNext, isGameOver }) {
+    return (
+        <div className="absolute inset-0 bg-white/90 flex flex-col items-center justify-center rounded z-10 p-6 text-center animate-in fade-in zoom-in duration-200">
+            {type === 'correct' ? (
+                <CheckCircle className="text-green-500 mb-4" size={64} />
+            ) : (
+                <XCircle className="text-red-500 mb-4" size={64} />
+            )}
+            <h3 className={`text-2xl font-bold mb-2 ${type === 'correct' ? 'text-green-600' : 'text-red-600'}`}>
+                {type === 'correct' ? 'Hebat!' : 'Oops!'}
+            </h3>
+            <p className="text-gray-600 mb-6 text-lg">{message}</p>
+            <button 
+                onClick={onNext}
+                className={`px-8 py-3 rounded-full font-bold text-white shadow-lg transform transition hover:scale-105 ${
+                    type === 'correct' ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'
+                }`}
+            >
+                {isGameOver ? "Coba Lagi" : "Lanjut"}
+            </button>
+        </div>
+    );
+}
+
 function StudentResult({ studentName, quizState, totalQuestions, onRestart }) {
   const [saved, setSaved] = useState(false);
+  
   useEffect(() => {
     if (saved) return;
-    addDoc(collection(db, "artifacts", appId, "public", "data", "results"), {
-      studentName,
-      totalScore: quizState.score,
-      finalGrade: calculateGrade(quizState.score, totalQuestions * 20),
-      createdAt: serverTimestamp(),
-    }).then(() => setSaved(true));
+    saveScore(studentName, quizState.score, totalQuestions).then(() => setSaved(true));
   }, [saved]);
 
   return (
