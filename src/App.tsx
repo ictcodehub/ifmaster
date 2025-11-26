@@ -4,6 +4,8 @@ import ModernWelcome from "./components/ModernWelcome";
 import ModernStudentReg from "./components/ModernStudentReg";
 import ModernFeedbackModal from "./components/ModernFeedbackModal";
 import ModernTeacherLogin from "./components/ModernTeacherLogin";
+import ModernQuizGame from "./components/ModernQuizGame";
+import Footer from "./components/Footer";
 import {
   Trophy,
   Heart,
@@ -254,7 +256,7 @@ export default function ExcelQuizApp() {
           />
         )}
         {view === "student-quiz" && (
-          <QuizGame
+          <ModernQuizGame
             questions={questions}
             studentName={studentName}
             quizState={quizState}
@@ -272,6 +274,7 @@ export default function ExcelQuizApp() {
         )}
       </main>
 
+      <Footer />
       <ErrorModal message={errorMsg} onClose={() => setErrorMsg(null)} />
     </div>
   );
