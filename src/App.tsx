@@ -195,7 +195,7 @@ export default function ExcelQuizApp() {
     );
 
   return (
-    <div className="min-h-screen bg-gray-100 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-100 font-sans text-gray-800 flex flex-col">
       {/* HEADER */}
       {view !== "welcome" &&
         view !== "teacher-login" &&
@@ -231,7 +231,7 @@ export default function ExcelQuizApp() {
         )}
 
       {/* MAIN CONTENT */}
-      <main className="max-w-5xl mx-auto p-4">
+      <main className="max-w-5xl mx-auto p-4 flex-1">
         {view === "welcome" && (
           <ModernWelcome
             onStudentClick={() => setView("student-reg")}
