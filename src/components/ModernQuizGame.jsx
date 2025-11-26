@@ -126,7 +126,7 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                     </div>
                 </div>
 
-                <h3 className="text-2xl font-bold text-gray-900 mb-6 leading-relaxed">{currentQ.question}</h3>
+                <h3 className="text-lg font-semibold text-gray-900 mb-6 leading-relaxed">{currentQ.question}</h3>
 
                 {currentQ.hint && (
                     <div className="mb-6">
@@ -160,8 +160,8 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                             onClick={submit}
                             disabled={!ans.trim()}
                             className={`absolute right-2 top-1/2 -translate-y-1/2 px-5 py-2.5 rounded-lg font-semibold transition-all flex items-center gap-2 text-sm ${ans.trim()
-                                    ? 'bg-[#217346] text-white hover:bg-[#1a5c37] shadow-sm'
-                                    : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                ? 'bg-[#217346] text-white hover:bg-[#1a5c37] shadow-sm'
+                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                 }`}
                         >
                             <Send size={14} />
@@ -200,10 +200,10 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                         <button
                             onClick={handleNext}
                             className={`w-full py-4 rounded-lg font-semibold text-base transition-all shadow-md ${modal.type === 'correct'
-                                    ? 'bg-green-600 text-white hover:bg-green-700'
-                                    : modal.isGameOver
-                                        ? 'bg-gray-600 text-white hover:bg-gray-700'
-                                        : 'bg-red-600 text-white hover:bg-red-700'
+                                ? 'bg-green-600 text-white hover:bg-green-700'
+                                : modal.isGameOver
+                                    ? 'bg-gray-600 text-white hover:bg-gray-700'
+                                    : 'bg-red-600 text-white hover:bg-red-700'
                                 }`}
                         >
                             {modal.isGameOver ? '🔄 Coba Lagi' : '➡️ Lanjut'}
