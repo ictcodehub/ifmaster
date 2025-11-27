@@ -37,18 +37,18 @@ export default function StudentResult({ studentName, quizState, totalQuestions, 
                     <Trophy size={80} className="mx-auto text-yellow-500 relative z-10 drop-shadow-md" />
                 </div>
 
-                <h2 className="text-3xl font-bold text-gray-800 mb-2">Kuis Selesai!</h2>
-                <p className="text-gray-500 mb-6">Hebat, {studentName}!</p>
+                <h2 className="text-3xl font-bold text-gray-800 mb-2">Quiz Finished!</h2>
+                <p className="text-gray-500 mb-6">Great job, {studentName}!</p>
 
                 <div className="bg-gray-50 rounded-xl p-6 mb-8 border border-gray-100">
-                    <div className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-1">Total Skor</div>
+                    <div className="text-sm text-gray-500 font-bold uppercase tracking-wider mb-1">Total Score</div>
                     <div className="text-6xl font-black text-[#217346] mb-2 tracking-tight">
                         {quizState.score}
                     </div>
                     <div className={`inline-block px-4 py-1 rounded-full text-sm font-bold ${grade === 'A' ? 'bg-green-100 text-green-700' :
-                            grade === 'B' ? 'bg-blue-100 text-blue-700' :
-                                grade === 'C' ? 'bg-yellow-100 text-yellow-700' :
-                                    'bg-red-100 text-red-700'
+                        grade === 'B' ? 'bg-blue-100 text-blue-700' :
+                            grade === 'C' ? 'bg-yellow-100 text-yellow-700' :
+                                'bg-red-100 text-red-700'
                         }`}>
                         Grade {grade}
                     </div>
@@ -58,7 +58,7 @@ export default function StudentResult({ studentName, quizState, totalQuestions, 
                     onClick={onRestart}
                     className="w-full bg-[#217346] text-white py-3.5 rounded-xl font-bold text-lg hover:bg-[#1a5c37] transition-all shadow-lg shadow-green-900/20 flex items-center justify-center gap-2"
                 >
-                    <RotateCcw size={20} /> Main Lagi
+                    <RotateCcw size={20} /> Play Again
                 </button>
             </div>
         </div>

@@ -25,13 +25,13 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
         if (isCorrect) {
             const bonus = (quizState.streak + 1) % 3 === 0 ? 10 : 0;
             setQuizState((p) => ({ ...p, score: p.score + 20 + bonus, streak: p.streak + 1 }));
-            setModal({ type: 'correct', message: bonus > 0 ? `Benar! Bonus +${bonus}!` : 'Jawaban Benar!' });
+            setModal({ type: 'correct', message: bonus > 0 ? `Correct! Bonus +${bonus}!` : 'Correct Answer!' });
         } else {
             const newLives = quizState.lives - 1;
             setQuizState((p) => ({ ...p, lives: newLives, score: Math.max(0, p.score - 3), streak: 0 }));
             setModal({
                 type: 'wrong',
-                message: newLives <= 0 ? 'Game Over!' : 'Salah! -1 Nyawa',
+                message: newLives <= 0 ? 'Game Over!' : 'Wrong! -1 Life',
                 isGameOver: newLives <= 0
             });
         }
@@ -74,7 +74,7 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                         <div className="flex items-center justify-center mb-2">
                             <Trophy className="text-yellow-600" size={20} strokeWidth={2} />
                         </div>
-                        <div className="text-xs text-gray-500 font-medium mb-1">Skor</div>
+                        <div className="text-xs text-gray-500 font-medium mb-1">Score</div>
                         <div className="text-2xl font-bold text-gray-900">{quizState.score}</div>
                     </div>
 
@@ -82,7 +82,7 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                         <div className="flex items-center justify-center mb-2">
                             <Heart className="text-red-500" size={20} strokeWidth={2} fill="currentColor" />
                         </div>
-                        <div className="text-xs text-gray-500 font-medium mb-1">Nyawa</div>
+                        <div className="text-xs text-gray-500 font-medium mb-1">Lives</div>
                         <div className="text-2xl font-bold text-gray-900">{quizState.lives}</div>
                     </div>
 
@@ -105,7 +105,7 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
 
                 <div className="px-6 py-4 bg-gray-50 border-t border-gray-200">
                     <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
-                        <span className="font-medium">Soal {quizState.currentQuestionIndex + 1} dari {levelQs.length}</span>
+                        <span className="font-medium">Question {quizState.currentQuestionIndex + 1} of {levelQs.length}</span>
                         <span className="font-semibold text-[#217346]">{Math.round(progress)}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -135,7 +135,7 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                             className="flex items-center gap-2 text-[#217346] hover:text-[#1a5c37] font-semibold transition-colors text-sm"
                         >
                             <Lightbulb size={18} strokeWidth={2} />
-                            <span>{showHint ? 'Sembunyikan Hint' : 'Lihat Hint'}</span>
+                            <span>{showHint ? 'Hide Hint' : 'Show Hint'}</span>
                         </button>
                         {showHint && (
                             <div className="mt-3 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r">
@@ -152,7 +152,7 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                             value={ans}
                             onChange={(e) => setAns(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && submit()}
-                            placeholder="Ketik jawaban Anda..."
+                            placeholder="Type your answer..."
                             className="w-full px-4 py-4 pr-28 border-2 border-gray-200 rounded-lg font-mono text-base focus:border-[#217346] focus:ring-2 focus:ring-green-100 outline-none transition-all"
                             autoFocus
                         />
@@ -165,11 +165,11 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                                 }`}
                         >
                             <Send size={14} />
-                            <span>Kirim</span>
+                            <span>Submit</span>
                         </button>
                     </div>
                     <p className="text-xs text-gray-500">
-                        💡 Gunakan format Excel (contoh: =IF(A1{'>'}70,"Lulus","Gagal"))
+                        💡 Use Excel format (e.g., =IF(A1{'>'}70,"Pass","Fail"))
                     </p>
                 </div>
             </div>
@@ -190,7 +190,7 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
 
                         <h3 className={`text-3xl font-bold text-center mb-3 ${modal.type === 'correct' ? 'text-green-700' : 'text-red-700'
                             }`}>
-                            {modal.type === 'correct' ? '🎉 Hebat!' : '😔 Oops!'}
+                            {modal.type === 'correct' ? '🎉 Great!' : '😔 Oops!'}
                         </h3>
 
                         <p className="text-gray-700 text-center mb-6 font-medium text-lg">
@@ -206,7 +206,7 @@ export default function ModernQuizGame({ questions, studentName, quizState, setQ
                                     : 'bg-red-600 text-white hover:bg-red-700'
                                 }`}
                         >
-                            {modal.isGameOver ? '🔄 Coba Lagi' : '➡️ Lanjut'}
+                            {modal.isGameOver ? '🔄 Try Again' : '➡️ Next'}
                         </button>
                     </div>
                 </div>

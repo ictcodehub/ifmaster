@@ -14,7 +14,7 @@ export default function ModernTeacherLogin({ onLogin, onBack }) {
         <div className="flex items-center justify-center w-full">
             <div className="fixed inset-0 bg-gradient-to-br from-green-50 via-white to-emerald-50 -z-10"></div>
 
-            <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full border border-gray-200">
+            <div className="bg-white p-10 rounded-2xl shadow-lg max-w-md w-full border border-gray-200">
                 <div className="w-16 h-16 bg-[#217346] rounded-xl flex items-center justify-center mx-auto mb-4 shadow-md">
                     <Shield size={32} className="text-white" strokeWidth={2} />
                 </div>
@@ -22,11 +22,11 @@ export default function ModernTeacherLogin({ onLogin, onBack }) {
                 <h2 className="text-2xl font-bold mb-2 text-center text-gray-900">
                     Login Guru
                 </h2>
-                <p className="text-sm text-center text-gray-600 mb-6">
+                <p className="text-sm text-center text-gray-600 mb-8">
                     Akses khusus untuk pengelola kuis
                 </p>
 
-                <form onSubmit={handleSubmit} className="space-y-4">
+                <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label className="block text-xs font-bold text-gray-700 mb-1.5">
                             PIN Admin
@@ -45,7 +45,7 @@ export default function ModernTeacherLogin({ onLogin, onBack }) {
                         </div>
                     </div>
 
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <button
                             type="submit"
                             className="w-full py-3.5 bg-[#217346] text-white rounded-lg font-semibold shadow-md hover:bg-[#1a5c37] transition-all flex justify-center items-center gap-2 text-base"

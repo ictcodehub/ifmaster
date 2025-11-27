@@ -92,7 +92,7 @@ export default function ExcelQuizApp() {
   // Handlers
   const handleTeacherLogin = (pin) => {
     if (pin === PIN_GURU) setView("teacher-dash");
-    else setErrorMsg("PIN Salah!");
+    else setErrorMsg("Incorrect PIN!");
   };
 
   const handleStartQuiz = (name) => {
