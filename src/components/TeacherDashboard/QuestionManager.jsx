@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { RefreshCw, Save, Trash2 } from "lucide-react";
-import { addDoc, collection, deleteDoc, doc, serverTimestamp } from "firebase/firestore";
+import { RefreshCw, Save, Trash2, Pencil, X } from "lucide-react";
+import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db, appId } from "../../lib/firebase";
 
 export default function QuestionManager({ questions, onError }) {
@@ -10,25 +10,56 @@ export default function QuestionManager({ questions, onError }) {
         answer: "",
         hint: "",
     });
+    const [editingId, setEditingId] = useState(null);
 
     const handleSave = async () => {
         if (!formData.question || !formData.answer)
             return onError("Isi soal dan jawaban!");
         try {
-            await addDoc(
-                collection(db, "artifacts", appId, "public", "data", "questions"),
-                {
-                    ...formData,
-                    level: Number(formData.level),
-                    createdAt: serverTimestamp(),
-                }
-            );
+            if (editingId) {
+                // Update existing question
+                await updateDoc(
+                    doc(db, "artifacts", appId, "public", "data", "questions", editingId),
+                    {
+                        ...formData,
+                        level: Number(formData.level),
+                    }
+                );
+                alert("Soal berhasil diupdate!");
+            } else {
+                // Add new question
+                await addDoc(
+                    collection(db, "artifacts", appId, "public", "data", "questions"),
+                    {
+                        ...formData,
+                        level: Number(formData.level),
+                        createdAt: serverTimestamp(),
+                    }
+                );
+                alert("Soal tersimpan!");
+            }
             setFormData({ level: 1, question: "", answer: "", hint: "" });
-            alert("Soal tersimpan!");
+            setEditingId(null);
         } catch (e) {
             console.error(e);
             onError("Gagal simpan (Cek Permission Firestore)");
         }
+    };
+
+    const handleEdit = (q) => {
+        setFormData({
+            level: q.level,
+            question: q.question,
+            answer: q.answer,
+            hint: q.hint || "",
+        });
+        setEditingId(q.id);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleCancelEdit = () => {
+        setFormData({ level: 1, question: "", answer: "", hint: "" });
+        setEditingId(null);
     };
 
     const handleDelete = async (id) => {
@@ -88,16 +119,20 @@ export default function QuestionManager({ questions, onError }) {
     return (
         <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
             <div className="flex justify-between mb-4 items-center">
-                <h3 className="text-lg font-bold text-gray-800">Input Soal Baru</h3>
-                <button
-                    onClick={seedData}
-                    className="bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-2 text-gray-700 font-medium transition-colors text-xs"
-                >
-                    <RefreshCw size={14} /> Seed Data (Isi Otomatis)
-                </button>
+                <h3 className="text-lg font-bold text-gray-800">
+                    {editingId ? "Edit Soal" : "Input Soal Baru"}
+                </h3>
+                {!editingId && (
+                    <button
+                        onClick={seedData}
+                        className="bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-2 text-gray-700 font-medium transition-colors text-xs"
+                    >
+                        <RefreshCw size={14} /> Seed Data (Isi Otomatis)
+                    </button>
+                )}
             </div>
 
-            <div className="bg-gray-50 p-4 rounded-xl mb-4 border border-gray-200">
+            <div className={`p-4 rounded-xl mb-4 border transition-colors ${editingId ? "bg-yellow-50 border-yellow-200" : "bg-gray-50 border-gray-200"}`}>
                 <div className="grid gap-3 mb-3">
                     <div className="grid grid-cols-12 gap-3">
                         <div className="col-span-3">
@@ -152,12 +187,22 @@ export default function QuestionManager({ questions, onError }) {
                     </div>
                 </div>
 
-                <button
-                    onClick={handleSave}
-                    className="bg-[#217346] text-white px-4 py-2.5 rounded-lg w-full font-bold text-sm hover:bg-[#1a5c37] transition-all flex items-center justify-center gap-2 shadow-md"
-                >
-                    <Save size={16} /> Simpan Soal
-                </button>
+                <div className="flex gap-2">
+                    <button
+                        onClick={handleSave}
+                        className={`text-white px-4 py-2.5 rounded-lg w-full font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${editingId ? "bg-yellow-600 hover:bg-yellow-700" : "bg-[#217346] hover:bg-[#1a5c37]"}`}
+                    >
+                        <Save size={16} /> {editingId ? "Update Soal" : "Simpan Soal"}
+                    </button>
+                    {editingId && (
+                        <button
+                            onClick={handleCancelEdit}
+                            className="bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
+                        >
+                            <X size={16} /> Batal
+                        </button>
+                    )}
+                </div>
             </div>
 
             <h3 className="text-base font-bold text-gray-800 mb-3">Daftar Soal ({questions.length})</h3>
@@ -165,7 +210,7 @@ export default function QuestionManager({ questions, onError }) {
                 {questions.map((q) => (
                     <div
                         key={q.id}
-                        className="border border-gray-200 p-3 rounded-xl flex justify-between items-center bg-white hover:border-green-100 transition-colors"
+                        className={`border p-3 rounded-xl flex justify-between items-center transition-colors ${editingId === q.id ? "border-yellow-400 bg-yellow-50" : "border-gray-200 bg-white hover:border-green-100"}`}
                     >
                         <div className="flex items-center gap-3">
                             <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${q.level === 1 ? 'bg-green-100 text-green-700' :
@@ -178,13 +223,22 @@ export default function QuestionManager({ questions, onError }) {
                             </span>
                             <span className="text-sm text-gray-700 font-medium">{q.question}</span>
                         </div>
-                        <button
-                            onClick={() => handleDelete(q.id)}
-                            className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                            title="Hapus Soal"
-                        >
-                            <Trash2 size={16} />
-                        </button>
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={() => handleEdit(q)}
+                                className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all"
+                                title="Edit Soal"
+                            >
+                                <Pencil size={16} />
+                            </button>
+                            <button
+                                onClick={() => handleDelete(q.id)}
+                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                title="Hapus Soal"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
                     </div>
                 ))}
                 {questions.length === 0 && (
