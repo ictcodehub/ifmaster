@@ -1,9 +1,10 @@
-import React, { useState } from "react";
-import { RefreshCw, Save, Trash2, Pencil, X } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { RefreshCw, Save, Trash2, Pencil, X, Layers } from "lucide-react";
 import { addDoc, collection, deleteDoc, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db, appId } from "../../lib/firebase";
 
 export default function QuestionManager({ questions, onError }) {
+    const [activeLevel, setActiveLevel] = useState(1);
     const [formData, setFormData] = useState({
         level: 1,
         question: "",
@@ -11,6 +12,15 @@ export default function QuestionManager({ questions, onError }) {
         hint: "",
     });
     const [editingId, setEditingId] = useState(null);
+
+    // Sync formData level with active tab
+    useEffect(() => {
+        if (!editingId) {
+            setFormData(prev => ({ ...prev, level: activeLevel }));
+        }
+    }, [activeLevel, editingId]);
+
+    const filteredQuestions = questions.filter(q => q.level === activeLevel);
 
     const handleSave = async () => {
         if (!formData.question || !formData.answer)
@@ -38,7 +48,7 @@ export default function QuestionManager({ questions, onError }) {
                 );
                 alert("Soal tersimpan!");
             }
-            setFormData({ level: 1, question: "", answer: "", hint: "" });
+            setFormData({ level: activeLevel, question: "", answer: "", hint: "" });
             setEditingId(null);
         } catch (e) {
             console.error(e);
@@ -54,11 +64,13 @@ export default function QuestionManager({ questions, onError }) {
             hint: q.hint || "",
         });
         setEditingId(q.id);
+        // If editing a question from a different level (shouldn't happen with tabs, but safety first), switch tab
+        setActiveLevel(q.level);
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
     const handleCancelEdit = () => {
-        setFormData({ level: 1, question: "", answer: "", hint: "" });
+        setFormData({ level: activeLevel, question: "", answer: "", hint: "" });
         setEditingId(null);
     };
 
@@ -117,135 +129,154 @@ export default function QuestionManager({ questions, onError }) {
     };
 
     return (
-        <div className="bg-white rounded-xl shadow-lg p-4 border border-gray-200">
-            <div className="flex justify-between mb-4 items-center">
-                <h3 className="text-lg font-bold text-gray-800">
-                    {editingId ? "Edit Soal" : "Input Soal Baru"}
-                </h3>
-                {!editingId && (
-                    <button
-                        onClick={seedData}
-                        className="bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-2 text-gray-700 font-medium transition-colors text-xs"
-                    >
-                        <RefreshCw size={14} /> Seed Data (Isi Otomatis)
-                    </button>
-                )}
+        <div className="bg-white rounded-xl shadow-lg border border-gray-200 overflow-hidden">
+            {/* Level Tabs */}
+            <div className="flex overflow-x-auto border-b border-gray-200 bg-gray-50">
+                {[1, 2, 3, 4, 5].map((level) => {
+                    const count = questions.filter(q => q.level === level).length;
+                    return (
+                        <button
+                            key={level}
+                            onClick={() => setActiveLevel(level)}
+                            className={`flex-1 py-4 px-4 text-sm font-bold whitespace-nowrap transition-all flex items-center justify-center gap-2 ${activeLevel === level
+                                ? "bg-white text-[#217346] border-t-4 border-t-[#217346] shadow-sm"
+                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-100"
+                                }`}
+                        >
+                            <Layers size={16} />
+                            Level {level}
+                            <span className={`ml-1 px-2 py-0.5 rounded-full text-xs ${activeLevel === level ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-600"
+                                }`}>
+                                {count}
+                            </span>
+                        </button>
+                    );
+                })}
             </div>
 
-            <div className={`p-4 rounded-xl mb-4 border transition-colors ${editingId ? "bg-yellow-50 border-yellow-200" : "bg-gray-50 border-gray-200"}`}>
-                <div className="grid gap-3 mb-3">
-                    <div className="grid grid-cols-12 gap-3">
-                        <div className="col-span-3">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Level Kesulitan</label>
-                            <select
-                                className="w-full p-2 border border-gray-200 rounded-lg bg-white text-sm focus:border-[#217346] outline-none"
-                                value={formData.level}
-                                onChange={(e) =>
-                                    setFormData({ ...formData, level: e.target.value })
-                                }
-                            >
-                                {[1, 2, 3, 4, 5].map((l) => (
-                                    <option key={l} value={l}>
-                                        Level {l}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                        <div className="col-span-9">
-                            <label className="block text-xs font-bold text-gray-700 mb-1">Pertanyaan</label>
+            <div className="p-6">
+                <div className="flex justify-between mb-6 items-center">
+                    <h3 className="text-lg font-bold text-gray-800">
+                        {editingId ? `Edit Soal Level ${formData.level}` : `Input Soal Baru - Level ${activeLevel}`}
+                    </h3>
+                    {!editingId && (
+                        <button
+                            onClick={seedData}
+                            className="bg-gray-100 hover:bg-gray-200 px-3 py-1.5 rounded-lg flex items-center gap-2 text-gray-700 font-medium transition-colors text-xs"
+                        >
+                            <RefreshCw size={14} /> Seed Data
+                        </button>
+                    )}
+                </div>
+
+                <div className={`p-5 rounded-xl mb-8 border transition-colors ${editingId ? "bg-yellow-50 border-yellow-200" : "bg-gray-50 border-gray-200"}`}>
+                    <div className="grid gap-4 mb-4">
+                        <div>
+                            <label className="block text-xs font-bold text-gray-700 mb-1.5">Pertanyaan</label>
                             <input
-                                className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:border-[#217346] outline-none"
-                                placeholder="Tulis pertanyaan di sini..."
+                                className="w-full p-3 border border-gray-200 rounded-lg text-sm focus:border-[#217346] outline-none shadow-sm"
+                                placeholder={`Tulis pertanyaan untuk Level ${activeLevel}...`}
                                 value={formData.question}
                                 onChange={(e) =>
                                     setFormData({ ...formData, question: e.target.value })
                                 }
                             />
                         </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5">Kunci Jawaban (Rumus Excel)</label>
+                                <input
+                                    className="w-full p-3 border border-gray-200 rounded-lg font-mono text-sm focus:border-[#217346] outline-none shadow-sm"
+                                    placeholder='=IF(A1>70,"Lulus","Gagal")'
+                                    value={formData.answer}
+                                    onChange={(e) =>
+                                        setFormData({ ...formData, answer: e.target.value })
+                                    }
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-xs font-bold text-gray-700 mb-1.5">Hint / Bantuan</label>
+                                <input
+                                    className="w-full p-3 border border-gray-200 rounded-lg text-sm focus:border-[#217346] outline-none shadow-sm"
+                                    placeholder="Contoh: Gunakan tanda kutip"
+                                    value={formData.hint}
+                                    onChange={(e) => setFormData({ ...formData, hint: e.target.value })}
+                                />
+                            </div>
+                        </div>
                     </div>
 
-                    <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Kunci Jawaban (Rumus Excel)</label>
-                        <input
-                            className="w-full p-2 border border-gray-200 rounded-lg font-mono text-sm focus:border-[#217346] outline-none"
-                            placeholder='=IF(A1>70,"Lulus","Gagal")'
-                            value={formData.answer}
-                            onChange={(e) =>
-                                setFormData({ ...formData, answer: e.target.value })
-                            }
-                        />
-                    </div>
-
-                    <div>
-                        <label className="block text-xs font-bold text-gray-700 mb-1">Hint / Bantuan</label>
-                        <input
-                            className="w-full p-2 border border-gray-200 rounded-lg text-sm focus:border-[#217346] outline-none"
-                            placeholder="Contoh: Gunakan tanda kutip untuk teks"
-                            value={formData.hint}
-                            onChange={(e) => setFormData({ ...formData, hint: e.target.value })}
-                        />
+                    <div className="flex gap-3">
+                        <button
+                            onClick={handleSave}
+                            className={`text-white px-6 py-2.5 rounded-lg font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${editingId ? "bg-yellow-600 hover:bg-yellow-700 flex-1" : "bg-[#217346] hover:bg-[#1a5c37] w-full"}`}
+                        >
+                            <Save size={18} /> {editingId ? "Update Soal" : "Simpan Soal"}
+                        </button>
+                        {editingId && (
+                            <button
+                                onClick={handleCancelEdit}
+                                className="bg-white border border-gray-300 text-gray-700 px-6 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-50 transition-all flex items-center justify-center gap-2 flex-1"
+                            >
+                                <X size={18} /> Batal
+                            </button>
+                        )}
                     </div>
                 </div>
 
-                <div className="flex gap-2">
-                    <button
-                        onClick={handleSave}
-                        className={`text-white px-4 py-2.5 rounded-lg w-full font-bold text-sm transition-all flex items-center justify-center gap-2 shadow-md ${editingId ? "bg-yellow-600 hover:bg-yellow-700" : "bg-[#217346] hover:bg-[#1a5c37]"}`}
-                    >
-                        <Save size={16} /> {editingId ? "Update Soal" : "Simpan Soal"}
-                    </button>
-                    {editingId && (
-                        <button
-                            onClick={handleCancelEdit}
-                            className="bg-gray-200 text-gray-700 px-4 py-2.5 rounded-lg font-bold text-sm hover:bg-gray-300 transition-all flex items-center justify-center gap-2"
+                <h3 className="text-base font-bold text-gray-800 mb-4 flex items-center gap-2">
+                    <Layers size={18} className="text-[#217346]" />
+                    Daftar Soal Level {activeLevel}
+                </h3>
+
+                <div className="space-y-3">
+                    {filteredQuestions.map((q) => (
+                        <div
+                            key={q.id}
+                            className={`border p-4 rounded-xl flex justify-between items-center transition-all ${editingId === q.id
+                                ? "border-yellow-400 bg-yellow-50 shadow-md"
+                                : "border-gray-200 bg-white hover:border-green-200 hover:shadow-sm"}`}
                         >
-                            <X size={16} /> Batal
-                        </button>
+                            <div className="flex-1 mr-4">
+                                <p className="text-gray-800 font-medium mb-1">{q.question}</p>
+                                <div className="flex items-center gap-3 text-xs text-gray-500 font-mono">
+                                    <span className="bg-gray-100 px-2 py-0.5 rounded border border-gray-200">
+                                        {q.answer}
+                                    </span>
+                                    {q.hint && (
+                                        <span className="flex items-center gap-1 text-amber-600">
+                                            💡 {q.hint}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => handleEdit(q)}
+                                    className="p-2 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all"
+                                    title="Edit Soal"
+                                >
+                                    <Pencil size={18} />
+                                </button>
+                                <button
+                                    onClick={() => handleDelete(q.id)}
+                                    className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                                    title="Hapus Soal"
+                                >
+                                    <Trash2 size={18} />
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                    {filteredQuestions.length === 0 && (
+                        <div className="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200">
+                            <p className="text-gray-500 font-medium mb-1">Belum ada soal untuk Level {activeLevel}</p>
+                            <p className="text-xs text-gray-400">Gunakan form di atas untuk menambahkan soal baru.</p>
+                        </div>
                     )}
                 </div>
-            </div>
-
-            <h3 className="text-base font-bold text-gray-800 mb-3">Daftar Soal ({questions.length})</h3>
-            <div className="space-y-2">
-                {questions.map((q) => (
-                    <div
-                        key={q.id}
-                        className={`border p-3 rounded-xl flex justify-between items-center transition-colors ${editingId === q.id ? "border-yellow-400 bg-yellow-50" : "border-gray-200 bg-white hover:border-green-100"}`}
-                    >
-                        <div className="flex items-center gap-3">
-                            <span className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${q.level === 1 ? 'bg-green-100 text-green-700' :
-                                q.level === 2 ? 'bg-blue-100 text-blue-700' :
-                                    q.level === 3 ? 'bg-yellow-100 text-yellow-700' :
-                                        q.level === 4 ? 'bg-orange-100 text-orange-700' :
-                                            'bg-red-100 text-red-700'
-                                }`}>
-                                Lv.{q.level}
-                            </span>
-                            <span className="text-sm text-gray-700 font-medium">{q.question}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <button
-                                onClick={() => handleEdit(q)}
-                                className="p-1.5 text-gray-400 hover:text-yellow-600 hover:bg-yellow-50 rounded-lg transition-all"
-                                title="Edit Soal"
-                            >
-                                <Pencil size={16} />
-                            </button>
-                            <button
-                                onClick={() => handleDelete(q.id)}
-                                className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                                title="Hapus Soal"
-                            >
-                                <Trash2 size={16} />
-                            </button>
-                        </div>
-                    </div>
-                ))}
-                {questions.length === 0 && (
-                    <div className="text-center py-6 text-gray-400 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200 text-xs">
-                        Belum ada soal. Silakan tambah manual atau gunakan Seed Data.
-                    </div>
-                )}
             </div>
         </div>
     );
